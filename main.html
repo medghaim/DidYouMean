@@ -1,0 +1,508 @@
+
+
+
+<!DOCTYPE HTML>
+
+<html>
+
+<head>
+        <title>CSC428</title>
+    
+    <style type="text/css">
+    html {
+        height:100%;
+    }
+    body {
+    }
+    #id_click_button:hover {
+        cursor: pointer;
+    }
+    #id_four_links {
+        visibility: hidden;
+        position: absolute;
+        zIndex: 99;
+	font-size: 24px;
+    }
+    table {
+        border-collapse: collapse;
+    }
+    table th {
+        color: #ffffff;
+        background-color: #99FF88;
+        border: 1px solid #77DD66;
+        padding: 3px;
+        vertical-align: top;
+        text-align: middle;
+        font-size:18px;
+    }
+    table td {
+        border: 1px solid gray;
+        padding: 5px;
+        padding-top: 7px;
+        padding-bottom: 7px;
+        vertical-align: top;
+        font-size:12px;
+    }
+    div.class_header {
+        position:absolute;
+        font-family: arial;
+        font-weight: bold;
+        font-size: 200%;
+        top:0;
+        z-index:100;
+        text-align: center; 
+        padding: 20px; 
+        visibility: hidden;
+    }
+    </style>
+
+    <script type="text/javascript">
+
+    var NUM_TRIALS = 24;
+    var DELAY = 2000;
+    var trial = -1;
+    var links = new Array();
+    links[0] = '<a href="#">John F. Kennedy</a><br/>';
+    links[1] = '<a href="#">Abraham Lincoln</a><br/>';
+    links[2] = '<a href="#">George W. Bush</a><br/>';
+    links[3] = '<a href="#">Barack Obama</a><br/>';
+    //document.onmousemove = div_click;
+    var target = '<a href="#">Abraham Lincoln</a><br/>'; //Change this if we want to change target to test against
+
+    function getCookie(cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0; i<ca.length; i++) {
+            var c = ca[i].trim();
+            if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+        }
+        return "";
+    }
+    
+    function delete_cookie(name) {
+        document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    }
+
+    window.onload=function(){
+        // On load -- see if there is a trial here
+        var cookie = document.cookie;
+        
+        // If no trial= exists in cookie
+        trial = getCookie('trial');
+        if (trial == '') {
+            // Start a new experiment
+            document.cookie = "trial=1";
+            delete_cookie('errors');
+            document.cookie = "errors=0";
+            errors = getCookie("errors");
+            trial = 1;
+            delete_cookie('givedelay');
+        } else {
+            // Otherwise a trial was saved
+            trial = Number( trial );
+            if (trial>NUM_TRIALS) {
+                delete_cookie('givedelay');
+                delete_cookie('trial');
+                document.getElementById("id_trial").style.visibility='hidden';
+                document.getElementById("id_start_screen").style.visibility='hidden';
+                document.getElementById("id_four_links").style.visibility='hidden';
+                document.getElementById("id_delay").style.visibility='hidden';
+                document.getElementById("id_thank_you").style.visibility='visible';
+            } else {
+                start();
+            }
+        }
+    };
+    
+    function start() {
+        document.getElementById("id_start_screen").style.visibility='hidden';
+        document.getElementById("id_delay").style.visibility='visible';
+        document.getElementById("id_four_links").addEventListener("click", div_click, false);
+        
+        var give_a_delay = getCookie('givedelay');
+        delete_cookie('givedelay');
+        if (give_a_delay == '') {
+            run_trial();
+        } else {
+            setTimeout(run_trial, DELAY);
+        }
+    }
+    
+    function secret_button() {
+        document.getElementById("id_thank_you").style.visibility='hidden';
+        document.getElementById("id_results").style.visibility='visible';
+        var errors = Number( getCookie("errors") );
+        document.getElementById("TOTAL_ERRORS").innerHTML = errors;
+        document.getElementById("ERROR_AVG").innerHTML = (errors/NUM_TRIALS).toFixed(3);
+        displayTime();
+   }
+
+    // NO LONGER USED
+    function new_trial () {
+        trial += 1;
+        delete_cookie('trial');
+        document.cookie = "trial=" + trial;
+        if (trial>NUM_TRIALS) {
+            delete_cookie('givedelay');
+            delete_cookie('trial');
+            document.getElementById("id_trial").style.visibility='hidden';
+            document.getElementById("id_four_links").style.visibility='hidden';
+            document.getElementById("id_delay").style.visibility='hidden';
+            document.getElementById("id_thank_you").style.visibility='visible';
+            return;
+        }
+
+        // Set things hidden
+        document.getElementById("id_trial").style.visibility='hidden';
+        document.getElementById("id_four_links").style.visibility='hidden';
+        document.getElementById("id_delay").style.visibility='visible';
+        setTimeout(run_trial, DELAY);
+    }
+    
+    String.prototype.replaceAll = function(search, replace)
+    {
+        return this.replace(new RegExp('[' + search + ']', 'g'), replace);
+    };
+    
+    function run_trial() {
+        var trial_div = document.getElementById("id_trial");
+        var four_links_div = document.getElementById("id_four_links");
+        document.getElementById("id_delay").style.visibility='hidden';
+        
+        trial_div.style.visibility='visible';
+        trial_div.innerHTML='Trial ' + trial + '/' + NUM_TRIALS;
+        
+        four_links_div.style.visibility='visible';
+        
+        if (getCookie("trial_" + trial + "_link_permutation") == '') {
+            permute_links(four_links_div, trial);
+            reposition_links(four_links_div);
+        } else {
+            four_links_div.innerHTML  = getCookie("trial_" + trial + "_link_permutation").replaceAll(',', '');
+            four_links_div.style.left = getCookie("trial_" + trial + "_xy").split(',')[0];
+            four_links_div.style.top  = getCookie("trial_" + trial + "_xy").split(',')[1];
+            links[0] = (getCookie("trial_" + trial + "_link_permutation").split(','))[0];
+            links[1] = (getCookie("trial_" + trial + "_link_permutation").split(','))[1];
+            links[2] = (getCookie("trial_" + trial + "_link_permutation").split(','))[2];
+            links[3] = (getCookie("trial_" + trial + "_link_permutation").split(','))[3];
+        }
+        // If this is the first time we're running...
+        if (getCookie("trial_" + trial + "_started") == '') {
+            var trial_begin_time = new Date().getTime();
+            delete_cookie("trial_" + trial + "_begin_time");
+            document.cookie = "trial_" + trial + "_begin_time=" + trial_begin_time;
+            delete_cookie("trial_" + trial + "_errors");
+            document.cookie = "trial_" + trial + "_errors=0";
+            document.cookie = "trial_" + trial + "_started=1";
+            
+            // Don't need old one anymore
+            delete_cookie("trial_" + (trial-1) + "_started"); 
+            delete_cookie("trial_" + (trial-1) + "_link_permutation"); 
+            delete_cookie("trial_" + (trial-1) + "_xy"); 
+        }        
+    }
+
+    function permute_links(div, trial) {
+        links.sort(function() { return Math.random()-0.5; }); //rearranges order of link array
+        div.innerHTML = links[0] + links[1] + links[2] + links[3];
+        document.cookie = "trial_" + trial + "_link_permutation=" + links[0] +','+ links[1] +','+ links[2] +','+ links[3];
+    }
+    
+    function reposition_links(div) {
+        var doc=document.getElementsByTagName('html')[0];
+
+        var w=doc.offsetWidth;
+        var h=doc.offsetHeight;
+
+        var left_offset = Math.floor(Math.random()*w);
+        var top_offset  = Math.floor(Math.random()*(h-210))+190;
+
+        if(left_offset>w-div.offsetWidth){
+            left_offset=w-div.offsetWidth;
+        }
+        if(top_offset>h-div.offsetHeight){
+            top_offset=h-div.offsetHeight;
+        }
+        div.style.left = left_offset+'px';
+        div.style.top  = top_offset+'px';
+        document.cookie = "trial_" + trial + "_xy=" + left_offset +'px,' + top_offset  +'px';
+    }
+    
+    function div_click(e) {
+        
+        // Get the mouse coordinate of the click (relative to the page)
+        // Subtract div.left and div.top to get the coordinate relative to the div
+        var div = document.getElementById("id_four_links");
+        var parentPosition = getPosition(e.currentTarget);
+        var yPosition = e.clientY - parentPosition.y;
+        var percent_from_top = 100 * yPosition / div.offsetHeight;
+        
+        //working as intended.
+        if (percent_from_top < 25) { //first link - divide to 0->18.75, 18.75->25 
+            if(percent_from_top < 18.75){ 
+                clickChecker(links[0], ""); // remember, no link is ontop of this, so 0->18.75 range is "clean", 18.75->25 is "ambiguous".
+            } else {
+                //AMBIGUOUS CLICK w/ BELOW: FOCUS=links[0] / didyoumean=links[1]
+                clickChecker(links[0], links[1]);
+            }
+        } else if (percent_from_top < 50) { //second link - divide to 25->31.25, 31.25->37.5, 37.5->43.75, 43.75->50 
+            if(percent_from_top  < 31.25) { //25% - 31.24%
+                //AMBIGUOUS CLICK w/ ABOVE: FOCUS=links[1] / didyoumean=links[0]
+                clickChecker(links[1], links[0]);
+            }
+            else if(percent_from_top >= 31.25 && percent_from_top < 43.75) {        
+                 clickChecker(links[1], "");        
+            }
+            else { //43.75 -> 50
+                //AMBIGUOUS CLICK w/ BELOW: FOCUS=links[1] / didyoumean=links[2]
+                clickChecker(links[1], links[2]);
+            }
+        } else if (percent_from_top < 75) { //third link - divide to 50->56.25, 56.25->62.5, 62.5->68.75, 68.75->75
+            if(percent_from_top < 56.25) {
+                //AMBIGUOUS CLICK w/ ABOVE: FOCUS=links[2] / didyoumean=links[1]
+                clickChecker(links[2], links[1]);
+            }
+            else if(percent_from_top >= 56.25 && percent_from_top < 68.75){
+                clickChecker(links[2], "");        
+            }
+            else { //68.75->75
+                //AMBIGUOUS CLICK w/ BELOW: FOCUS=links[2] / didyoumean=links[3]
+                clickChecker(links[2], links[3]);
+            }
+        } else { //fourth link - divide to 75->81.25, 81.25->87.5, 87.5->93.75, 93.75->100
+            if(percent_from_top < 81.25) { //first quarter - ie, ambiguous
+                //AMBIGUOUS CLICK w/ ABOVE: FOCUS=links[3] / didyoumean=links[2]
+                clickChecker(links[3], links[2]);
+            }
+            else { //bottom 3/4's, (with nothing below, since its last link), ie, clean
+                clickChecker(links[3], ""); 
+            }
+        }
+                                        
+    }
+
+    function clickChecker(clicked_link, ambiguous_link) {
+        if(clicked_link == target)
+        {
+            var trial_end_time = new Date().getTime();
+            delete_cookie("trial_" + trial + "_time");
+            document.cookie = "trial_" + trial + "_time=" + (trial_end_time - getCookie("trial_" + trial + "_begin_time"));
+            delete_cookie("trial_" + trial + "_begin_time");
+
+            // Edit: Rather than call new_trial directly let's just reload the page
+            trial += 1;
+            delete_cookie('trial');
+            document.cookie = "trial=" + trial;
+            if (trial>NUM_TRIALS) {
+                delete_cookie('givedelay');
+                delete_cookie('trial');
+                document.getElementById("id_trial").style.visibility='hidden';
+                document.getElementById("id_four_links").style.visibility='hidden';
+                document.getElementById("id_delay").style.visibility='hidden';
+                document.getElementById("id_thank_you").style.visibility='visible';
+            } else {
+                delete_cookie('givedelay');
+                document.cookie = "givedelay=1";
+                window.location = "main.html";
+            }
+
+            //new_trial();
+        }
+        else
+        {
+            var ckie_name = 'trial_' + trial + '_errors';
+            var num_errs = 0;
+            var stored_num_errs = getCookie(ckie_name);
+            if (stored_num_errs != '' && stored_num_errs != 'NaN') {
+                num_errs = Number(stored_num_errs);
+            }
+            delete_cookie(ckie_name);
+            document.cookie = ckie_name + '=' + (num_errs+1);
+            
+            if (clicked_link == '<a href="#">John F. Kennedy</a><br/>') {
+                document.cookie = "picture=Kennedy";
+            } else if (clicked_link == '<a href="#">Abraham Lincoln</a><br/>') {
+                document.cookie = "picture=Lincoln";
+            } else if (clicked_link == '<a href="#">Barack Obama</a><br/>') {
+                document.cookie = "picture=Obama";
+            } else if (clicked_link == '<a href="#">George W. Bush</a><br/>') {
+                document.cookie = "picture=Bush";
+            } else {
+                document.cookie = "picture=;";
+            }
+            
+            if (ambiguous_link == '<a href="#">John F. Kennedy</a><br/>') {
+                document.cookie = "didyoumean=Kennedy";
+            } else if (ambiguous_link == '<a href="#">Abraham Lincoln</a><br/>') {
+                document.cookie = "didyoumean=Lincoln";
+            } else if (ambiguous_link == '<a href="#">Barack Obama</a><br/>') {
+                document.cookie = "didyoumean=Obama";
+            } else if (ambiguous_link == '<a href="#">George W. Bush</a><br/>') {
+                document.cookie = "didyoumean=Bush";
+            } else {
+                document.cookie = "didyoumean=;";
+            }
+            window.location = "error.html";
+        }
+    }
+
+    function getPosition(element) {
+        var xPosition = 0;
+        var yPosition = 0;
+          
+        while (element) {
+            xPosition += (element.offsetLeft - element.scrollLeft + element.clientLeft);
+            yPosition += (element.offsetTop - element.scrollTop + element.clientTop);
+            element = element.offsetParent;
+        }
+        return { x: xPosition, y: yPosition };
+    }
+    
+    function displayTime() {
+        var secs = 0;
+        //var mins = 0;
+        var avg = 0;
+        for(var i = 0; i<NUM_TRIALS; i++) {
+            secs+= Number( getCookie("trial_" + (i+1) + "_time") );
+        }
+
+        secs = secs / 1000; //now this is total number of seconds
+        avg = secs/NUM_TRIALS;
+        /*
+        while(secs > 59) {
+            mins++;
+            secs -= 60;
+        }
+        */
+        //document.getElementById("TOTAL_MINS").innerHTML = mins;
+        document.getElementById("TOTAL_SECS").innerHTML = secs.toFixed(1);
+        document.getElementById("AVG_TIME").innerHTML = avg.toFixed(1);
+
+        fillTable();
+    }
+
+    function fillTable() {
+        var tStr = "";
+        //Headers
+        for(var x = 1; x<NUM_TRIALS+1; x++) {
+            tStr += "<tr id='trial"+x+"'></tr>";
+        }
+        document.getElementById("individual_trials").innerHTML += tStr;
+        fillCells();
+    }        
+    function fillCells() {
+        for(var y = 1; y<NUM_TRIALS+1; y++) {
+            var id = "trial"+y;
+            var time = Number(getCookie("trial_" + y + "_time"));
+            var err_sring = getCookie("trial_" + y + "_errors");
+            var errs = 0;
+            if (err_sring != '' && err_sring != 'NaN') {
+                errs = Number(err_sring);
+            }
+            var got_lincoln_through_didyoumean = 0;
+            if (getCookie("trial_" + y + "_got_lincoln_through_didyoumean") != '') {
+                got_lincoln_through_didyoumean = 1;
+            }
+            
+            delete_cookie("trial_" + y + "_begin_time");
+            delete_cookie("trial_" + y + "_time");
+            delete_cookie("trial_" + y + "_errors");
+            delete_cookie("trial_" + y + "_started");
+            delete_cookie("trial_" + y + "_xy");
+            delete_cookie("trial_" + y + "_link_permutation");
+            delete_cookie("trial_" + y + "_got_lincoln_through_didyoumean");
+            
+            document.getElementById(id).innerHTML = "<td>"+y+"</td><td>"+(time/1000).toFixed(1)+"</td><td>"+errs+"</td><td>"+got_lincoln_through_didyoumean+"</td>";
+        }
+    }
+
+    </script>
+
+</head>
+
+<body>
+
+    <!-- Start Screen !-->
+    <div id="id_start_screen" style="text-align: center">
+        <br /><br /><br /><br /><br /><br />
+        <div 
+            style="text-align: left; width: 800px; margin-left: auto; margin-right: auto; font-family: arial; font-size: 200%;"
+        >
+            This experiment consists of 24 trials. There is a 3 second pause between each trial. <br/> <br/>
+            In each trial you will be shown four links. The links are close together and positioned randomly on the screen. <br/> <br/>
+            In each trial, click only the link that says Abraham Lincoln. If you click another link, 
+            navigate using the browser until Abraham Lincoln is clicked. Each trial ends only once Abraham Lincoln is clicked. <br/> <br/>
+            Your goal is to complete all 24 trials as quickly as possible! <br/> <br/>
+            
+            <div style="text-align:center">
+                <div id="id_click_button" onclick="javascript: start();" 
+                     style="margin-left: auto; margin-right: auto; width: 200px; padding: 30px; text-align: center;
+                            background-color:#44EE33; border-radius:25px;" 
+                > 
+                    Click to Begin
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+    <!-- Main Div Screen !-->
+    <div class="class_header" id="id_trial">
+    </div>
+    
+    <div class="class_header" id="id_thank_you" onclick="javascript: secret_button();" style="text-align: center;" >
+        You're done! Thanks for participating :)
+    </div>
+    <div class="class_header" id="id_results">
+        </br></br>
+
+        <table id="results">
+            <tr>
+                <th> Category </th>
+                <th> Result </th>
+            </tr>
+            <tr>
+                <td>Total Errors</td>
+                <td id="TOTAL_ERRORS"></td>
+            </tr>
+            <tr>
+                <td>Average Errors</td>
+                <td><div style="display:inline;" id="ERROR_AVG"></div></td>
+            </tr>
+            <tr>
+                <td>Total Time</td>
+                <td><div id="TOTAL_SECS" style="display:inline;"></div>
+            </tr>
+            <tr>
+                <td>Average Time</td>
+                <td><div style="display:inline;" id="AVG_TIME"></div>s</td>
+            </tr>
+        </table>
+        <br />
+        <br />
+        <table id="individual_trials">
+                <thead>
+                        <tr>
+                            <th> Trial # </th>
+                            <th> Time (secs) </th>
+                            <th> Error Count </th>
+                            <th> Got Linc from DidYouMean? </th>
+                        </tr>
+                </thead>
+        </table>    
+        <br /> <br />
+        Did they manually zoom in? (Yes/No)
+    
+    </div>
+    
+    <div class="class_header" id="id_delay">
+        Taking a break...
+    </div>
+    
+    <div id="id_four_links">
+    </div>
+
+</body>
+</html>
+  

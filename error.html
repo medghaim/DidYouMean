@@ -1,0 +1,114 @@
+
+<!DOCTYPE HTML>
+
+<html>
+
+<head>
+	<title>CSC428</title>
+    
+    <style type="text/css">
+    html {
+        height:100%;
+    }
+    body {
+        text-align: center;
+    }
+    span.class_link {
+        color: blue;
+        text-decoration:underline;
+        cursor: pointer;
+    }
+    </style>
+
+    <script type="text/javascript">
+    var picture;
+    var didyoumean;
+    
+    function getCookie(cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0; i<ca.length; i++) {
+            var c = ca[i].trim();
+            if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+        }
+        return "";
+    }
+    function delete_cookie(name) {
+        document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    }
+
+    function didyoumean_click() {
+        if (didyoumean=="Lincoln") {
+            var trial = Number( getCookie("trial") );
+            delete_cookie('trial');
+            document.cookie = "trial=" + (trial+1);
+            window.location = "main.html";
+        } else {
+            delete_cookie('picture');
+            document.cookie = "picture=" + didyoumean;
+            delete_cookie('didyoumean');
+            document.cookie = "didyoumean=;";
+            window.location = "error.html";
+        }
+    }
+    
+    window.onload=function(){
+        // Get cookie
+        picture = getCookie("picture");
+        didyoumean = getCookie("didyoumean");
+        
+        // New error
+        var errors = Number( getCookie("errors") );
+        delete_cookie('errors');
+        document.cookie = "errors=" + (errors+1);
+
+	// New trial_error
+	var trial_errors = Number (getCookie("trial_errors") );
+	delete_cookie(trial_errors);
+	document.cookie="trial_errors="+(trial_errors+1);
+        
+        // Set image and didyoumean
+        if (picture=="Kennedy") {
+            document.getElementById("id_img").visibility = 'visible';
+            document.getElementById("id_img").src="JFK.gif";
+        } else if (picture=="Bush") {
+            document.getElementById("id_img").visibility = 'visible';
+            document.getElementById("id_img").src="Bush.gif";
+        } else if (picture=="Obama") {
+            document.getElementById("id_img").visibility = 'visible';
+            document.getElementById("id_img").src="Obama.gif";
+        }
+        
+        if (didyoumean=="Kennedy") {
+            document.getElementById("id_didyoumean").visibility = 'visible';
+            var s = 'Did you mean ' + '<span class="class_link" onclick="didyoumean_click();">John F. Kennedy?</span>';
+            document.getElementById("id_didyoumean").innerHTML=s;
+        } else if (didyoumean=="Bush") {
+            document.getElementById("id_didyoumean").visibility = 'visible';
+            var s = 'Did you mean ' + '<span class="class_link" onclick="didyoumean_click();">George W. Bush?</span>';
+            document.getElementById("id_didyoumean").innerHTML=s;
+        } else if (didyoumean=="Obama") {
+            document.getElementById("id_didyoumean").visibility = 'visible';
+            var s = 'Did you mean ' + '<span class="class_link" onclick="didyoumean_click();">Barack Obama?</span>';
+            document.getElementById("id_didyoumean").innerHTML=s;
+        } else if (didyoumean=="Lincoln") {
+            document.getElementById("id_didyoumean").visibility = 'visible';
+            var s = 'Did you mean ' + '<span class="class_link" onclick="didyoumean_click();">Abraham Lincoln?</span>';
+            document.getElementById("id_didyoumean").innerHTML=s;
+        }
+    }
+    
+    </script>
+
+</head>
+
+<body>
+    <img src="" id="id_img" style="width: 100%;"/>
+    <br /><br /><br /><br />
+    <div id="id_didyoumean" style="background-color: #A0A0A0; border-radius: 20px; width: 500px; margin-left: auto; margin-right: auto; font-family: arial;
+                                   font-size: 150%; padding: 10px; margin-bottom: 10px; color: white; position: absolute; bottom: 0px; left:0px; right: 0px;">
+    </div>
+    
+</body>
+
+</html>
